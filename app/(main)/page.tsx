@@ -1,48 +1,58 @@
-"use client"
+'use client';
 
-import Link from "next/link"
-import { Star, Users, PlayCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { courses, categories } from "@/lib/mock-data"
-import { useState, useMemo } from "react"
+import Link from 'next/link';
+import { Star, Users, PlayCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { courses, categories } from '@/lib/mock-data';
+import { useState, useMemo } from 'react';
 
 export default function Home() {
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedDifficulty, setSelectedDifficulty] = useState("all")
-  const [selectedSort, setSelectedSort] = useState("popular")
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedDifficulty, setSelectedDifficulty] = useState('all');
+  const [selectedSort, setSelectedSort] = useState('popular');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 16;
 
   const filteredCourses = useMemo(() => {
-    let result = [...courses]
+    let result = [...courses];
 
     // Category Filter
-    if (selectedCategory !== "all") {
-      result = result.filter(course => course.category === selectedCategory)
+    if (selectedCategory !== 'all') {
+      result = result.filter((course) => course.category === selectedCategory);
     }
 
     // Difficulty Filter
-    if (selectedDifficulty !== "all") {
+    if (selectedDifficulty !== 'all') {
       // @ts-ignore - mock data updated but TS might not know yet
-      result = result.filter(course => course.difficulty === selectedDifficulty)
+      result = result.filter((course) => course.difficulty === selectedDifficulty);
     }
 
     // Sorting
     switch (selectedSort) {
-      case "popular":
-        result.sort((a, b) => b.studentCount - a.studentCount)
-        break
-      case "newest":
+      case 'popular':
+        result.sort((a, b) => b.studentCount - a.studentCount);
+        break;
+      case 'newest':
         // @ts-ignore
-        result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        break
-      case "rating":
-        result.sort((a, b) => b.rating - a.rating)
-        break
+        result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        break;
+      case 'rating':
+        result.sort((a, b) => b.rating - a.rating);
+        break;
     }
 
-    return result
-  }, [selectedCategory, selectedDifficulty, selectedSort])
+    return result;
+  }, [selectedCategory, selectedDifficulty, selectedSort]);
+
+  // Reset page when filters change
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, selectedDifficulty, selectedSort]);
+
+  const totalPages = Math.ceil(filteredCourses.length / ITEMS_PER_PAGE);
+  const paginatedCourses = filteredCourses.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div className="flex flex-col min-h-screen w-full">
@@ -66,15 +76,14 @@ export default function Home() {
       {/* Course Grid Section */}
       <section className="py-12 md:py-20 bg-background flex justify-center items-center">
         <div className="container px-4 md:px-8">
-          
           {/* Filters and Controls */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             {/* Categories */}
             <div className="flex flex-wrap gap-2">
               {categories.map((category) => (
-                <Badge 
-                  key={category.id} 
-                  variant={selectedCategory === category.value ? "default" : "secondary"}
+                <Badge
+                  key={category.id}
+                  variant={selectedCategory === category.value ? 'default' : 'secondary'}
                   className="px-4 py-2 text-sm cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => setSelectedCategory(category.value)}
                 >
@@ -85,7 +94,7 @@ export default function Home() {
 
             {/* Right Side Filters */}
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <select 
+              <select
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 value={selectedDifficulty}
                 onChange={(e) => setSelectedDifficulty(e.target.value)}
@@ -96,7 +105,7 @@ export default function Home() {
                 <option value="advanced">고급</option>
               </select>
 
-              <select 
+              <select
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 value={selectedSort}
                 onChange={(e) => setSelectedSort(e.target.value)}
@@ -109,14 +118,14 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredCourses.map((course) => (
+            {paginatedCourses.map((course) => (
               <Link href={`/courses/${course.id}`} key={course.id} className="group">
                 <Card className="h-full overflow-hidden border-border/50 bg-card/50 hover:bg-card hover:border-border transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg">
                   <div className="aspect-video relative overflow-hidden bg-muted">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img 
-                      src={course.thumbnail} 
-                      alt={course.title} 
+                    <img
+                      src={course.thumbnail}
+                      alt={course.title}
                       className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -126,33 +135,67 @@ export default function Home() {
                   <CardHeader className="p-4 space-y-2">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="font-medium text-indigo-400">{course.category.toUpperCase()}</span>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-                        <span>{course.rating}</span>
-                      </div>
                     </div>
                     <h3 className="font-bold leading-tight line-clamp-2 group-hover:text-indigo-400 transition-colors">
                       {course.title}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {course.instructor}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{course.instructor}</p>
                   </CardHeader>
                   <CardFooter className="p-4 pt-0 flex items-center justify-between mt-auto">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+                      <span>{course.rating}</span>
+                    </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Users className="w-3 h-3" />
                       <span>{course.studentCount.toLocaleString()}명</span>
                     </div>
-                    <span className="font-bold text-lg">
-                      {new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(course.price)}
-                    </span>
                   </CardFooter>
                 </Card>
               </Link>
             ))}
           </div>
+
+          {/* Pagination */}
+          {totalPages >= 1 && (
+            <div className="flex justify-center items-center gap-2 mt-12">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="border-zinc-800 hover:bg-zinc-800"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <Button
+                  key={i}
+                  variant={currentPage === i + 1 ? 'default' : 'outline'}
+                  size="icon"
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={
+                    currentPage === i + 1
+                      ? 'bg-indigo-600 hover:bg-indigo-700'
+                      : 'border-zinc-800 hover:bg-zinc-800 text-zinc-400'
+                  }
+                >
+                  {i + 1}
+                </Button>
+              ))}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="border-zinc-800 hover:bg-zinc-800"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </section>
     </div>
-  )
+  );
 }
